@@ -2,12 +2,12 @@ import os
 import subprocess
 import matplotlib.pyplot as plt
 
-IMGCAT = os.path.expanduser('~/.scripts/imgcat')
+IMGCAT = os.path.expanduser('~/local/bin/imgcat')
 
 def zs_dispFig(imgcat_path=IMGCAT):
     """
-    shows a matplotlib plot inline in iTerm by saving 
-    it to a temporary file, displaying the file and 
+    shows a matplotlib plot inline in iTerm by saving
+    it to a temporary file, displaying the file and
     then cleaning up.
 
     Note: This function requires the use of an iTerm
@@ -32,7 +32,7 @@ def zs_dispFig(imgcat_path=IMGCAT):
         plt.savefig(im_name)
 
     # display in iterm
-    subprocess.call([imgcat_path, im_name])
-    
+    subprocess.call([imgcat_path, "--depth", "iterm2", im_name])
+
     # clear up
     os.remove(im_name)
