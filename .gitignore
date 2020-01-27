@@ -3,3 +3,4 @@
 .vscode/
 zsvision.egg-info/
 build/
+*.tar.gz
