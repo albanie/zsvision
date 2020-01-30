@@ -74,3 +74,52 @@ def np_loader(np_path, l2norm=False):
         else:
             raise ValueError("unexpected data format {}".format(type(data)))
     return data
+
+
+def set_nested_key_val(key, val, target):
+    """Use a prefix key (e.g. key1.key2.key3) to set a value in a nested dict"""
+
+    # escape periods in keys
+    key = key.replace("_.", "&&")
+    subkeys = key.split(".")
+    subkeys = [x.replace("&&", ".") for x in subkeys]
+
+    nested = target
+    print("subkeys", subkeys)
+    for subkey in subkeys[:-1]:
+        try:
+            nested = nested.__getitem__(subkey)
+        except Exception as exception:
+            print(subkey)
+            raise exception
+    orig = nested[subkeys[-1]]
+    if orig == "":
+        if val == "":
+            val = 0
+        else:
+            val = str(val)
+    elif isinstance(orig, bool):
+        if val.lower() in {"0", "False"}:
+            val = False
+        else:
+            val = bool(val)
+    elif isinstance(orig, list):
+        if isinstance(val, str) and "," in val:
+            val = val.split(",")
+            # we use the convention that a trailing comma indicates a single item list
+            if len(val) == 2 and val[1] == "":
+                val.pop()
+            if val and not orig:
+                raise ValueError(f"Could not infer correct type from empty original list")
+            else:
+                val = [type(orig[0])(x) for x in val]
+        assert isinstance(val, list), "Failed to pass a list where expected"
+    elif isinstance(orig, int):
+        val = int(val)
+    elif isinstance(orig, float):
+        val = float(val)
+    elif isinstance(orig, str):
+        val = str(val)
+    else:
+        raise ValueError(f"unrecognised type: {type(val)}")
+    nested[subkeys[-1]] = val
