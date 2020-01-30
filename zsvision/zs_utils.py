@@ -3,6 +3,7 @@ import glob
 import time
 import pickle
 import socket
+import json
 import fnmatch
 import functools
 from pathlib import Path
@@ -26,6 +27,9 @@ def memcache(path):
         res = np_loader(path)
     elif suffix == ".mp":
         res = msgpack_loader(path)
+    elif suffix == ".json":
+        with open(path, "r") as f:
+            res = json.load(f)
     else:
         raise ValueError(f"unknown suffix: {suffix} for path {path}")
     print(f"[Total: {time.time() - tic:.1f}s] ({socket.gethostname() + ':' + str(path)})")
