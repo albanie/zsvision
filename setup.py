@@ -7,13 +7,19 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="zsvision",
-    version="0.1.2",
+    version="0.1.3",
     author="Samuel Albanie",
     description="Python utilities for computer vision",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/albanie/zsvision",
     packages=setuptools.find_packages(),
+    python_requires=">=3.6",
+    install_requires=[
+        "numpy",
+        "msgpack",
+        "msgpack_numpy",
+    ],
     classifiers=[
         "Programming Language :: Python :: 3.6",
         "License :: OSI Approved :: MIT License",
