@@ -30,6 +30,8 @@ def memcache(path):
     elif suffix == ".json":
         with open(path, "r") as f:
             res = json.load(f)
+    elif suffix == ".mat":
+        res = loadmat(path)
     else:
         raise ValueError(f"unknown suffix: {suffix} for path {path}")
     print(f"[Total: {time.time() - tic:.1f}s] ({socket.gethostname() + ':' + str(path)})")
