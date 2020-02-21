@@ -2,13 +2,16 @@
 import torch
 import time
 
+
 def format_time(time_secs):
-    return '{0:.3f}s'.format(time_secs) # can upgrade later
+    return '{0:.3f}s'.format(time_secs)
+
 
 def start_timer():
     """useful for benchmarking"""
     torch.cuda.synchronize()
     return time.perf_counter()
+
 
 def summary(name, start_time, display=False):
     """useful for benchmarking"""

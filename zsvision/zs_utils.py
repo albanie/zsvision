@@ -1,16 +1,12 @@
-import os
-import glob
 import time
 import pickle
 import socket
 import json
-import fnmatch
 import functools
 from pathlib import Path
 import scipy.io as spio
 
 import numpy as np
-import msgpack
 import msgpack_numpy as msgpack_np
 
 msgpack_np.patch()
@@ -185,3 +181,23 @@ def loadmat(filename):
         return elem_list
     data = spio.loadmat(filename, struct_as_record=False, squeeze_me=True)
     return _check_keys(data)
+
+
+class BlockTimer:
+    """A minimal inline codeblock timer"""
+    def __init__(self, msg, precise=False, mute=False):
+        self.msg = msg
+        self.mute = mute
+        self.precise = precise
+
+    def __enter__(self):
+        self.start = time.time()
+        return self
+
+    def __exit__(self, *args):
+        if self.precise:
+            total = f"{time.time() - self.start:.3f}s"
+        else:
+            total = time.strftime('%Hh%Mm%Ss', time.gmtime(time.time() - self.start))
+        if not self.mute:
+            print(f"{self.msg} took {total}")
