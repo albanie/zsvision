@@ -131,15 +131,21 @@ def loadmat(filename):
     """This function should be called instead of direct spio.loadmat
     as it cures the problem of not properly recovering python dictionaries
     from mat files. It calls the function check keys to cure all entries
-    which are still mat-objects
+    which are still mat-objects.
 
+    The function is heavily based on this reference:
     https://stackoverflow.com/a/29126361
+
+    Args:
+        filename (str): the location of the .mat file to load
+    
+    Returns:
+        (dict): a parsed .mat file in the form of a python dictionary.
     """
     def _check_keys(d):
-        '''
-        checks if entries in dictionary are mat-objects. If yes
+        """Checks if entries in dictionary are mat-objects. If yes
         todict is called to change them to nested dictionaries
-        '''
+        """
         for key in d:
             if isinstance(d[key], spio.matlab.mio5_params.mat_struct):
                 d[key] = _todict(d[key])
@@ -150,9 +156,8 @@ def loadmat(filename):
         return d
 
     def _todict(matobj):
-        '''
-        A recursive function which constructs from matobjects nested dictionaries
-        '''
+        """A recursive function which constructs from matobjects nested dictionaries
+        """
         d = {}
         for strg in matobj._fieldnames:
             elem = matobj.__dict__[strg]
@@ -165,11 +170,12 @@ def loadmat(filename):
         return d
 
     def _tolist(ndarray):
-        '''
-        A recursive function which constructs lists from cellarrays
+        """A recursive function which constructs lists from cellarrays
         (which are loaded as numpy ndarrays), recursing into the elements
-        if they contain matobjects.
-        '''
+        if they contain matobjects or are non-numeric.
+        """
+        if np.issubdtype(ndarray.dtype, np.number):
+            return ndarray
         elem_list = []
         for sub_elem in ndarray:
             if isinstance(sub_elem, spio.matlab.mio5_params.mat_struct):
@@ -179,6 +185,7 @@ def loadmat(filename):
             else:
                 elem_list.append(sub_elem)
         return elem_list
+
     data = spio.loadmat(filename, struct_as_record=False, squeeze_me=True)
     return _check_keys(data)
 
