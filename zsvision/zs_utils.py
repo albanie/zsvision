@@ -15,7 +15,7 @@ msgpack_np.patch()
 @functools.lru_cache(maxsize=64, typed=False)
 def memcache(path):
     suffix = Path(path).suffix
-    print(f"loading features >>> ", end=" ")
+    print(f"loading data from {path} ({socket.gethostname()})", end=" ", flush=True)
     tic = time.time()
     if suffix in {".pkl", ".pickle"}:
         res = pickle_loader(path)
@@ -30,7 +30,7 @@ def memcache(path):
         res = loadmat(path)
     else:
         raise ValueError(f"unknown suffix: {suffix} for path {path}")
-    print(f"[Total: {time.time() - tic:.1f}s] ({socket.gethostname() + ':' + str(path)})")
+    print(f"[Total: {time.time() - tic:.1f}s]")
     return res
 
 
