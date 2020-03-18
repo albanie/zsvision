@@ -15,7 +15,6 @@ import humanize
 import pickle
 import numpy as np
 from typing import List
-from zsvision.zs_utils import BlockTimer
 
 
 class ExpertStore:

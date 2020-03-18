@@ -1,3 +1,4 @@
+import sys
 import time
 import pickle
 import socket
@@ -8,6 +9,8 @@ import scipy.io as spio
 
 import numpy as np
 import msgpack_numpy as msgpack_np
+from zsvision.zs_beartype import beartype
+import zsvision.zs_data_structures
 
 msgpack_np.patch()
 
@@ -34,17 +37,43 @@ def memcache(path):
     return res
 
 
-def pickle_loader(pkl_path):
+@beartype
+def support_old_pickles(buffer: bytes) -> object:
+    try:
+        data = pickle.loads(buffer, encoding="latin1")
+    except ModuleNotFoundError as exception:
+        if "datastructures" in exception.msg:
+            sys.modules['datastructures'] = zsvision.zs_data_structures
+            data = pickle.loads(buffer, encoding="latin1")
+    return data
+
+
+@beartype
+def pickle_loader(pkl_path: Path, backwards_compatible: bool = True) -> object:
+    """Deserialise object from pickle.
+
+    Args:
+        pkl_path: the location of the path where the pickle path is stored
+        backwards_compatible: if true, support old pickle formats used with the.
+            ExpertStore format
+
+    Return:
+        The deserialised object.
+    """
     tic = time.time()
     with open(pkl_path, "rb") as f:
         buffer = f.read()
         print(f"[I/O: {time.time() - tic:.1f}s]", end=" ")
         tic = time.time()
-        data = pickle.loads(buffer, encoding="latin1")
+        if backwards_compatible:
+            data = support_old_pickles(buffer)
+        else:
+            data = pickle.loads(buffer, encoding="latin1")
         print(f"[deserialisation: {time.time() - tic:.1f}s]", end=" ")
     return data
 
 
+@beartype
 def msgpack_loader(mp_path):
     """Msgpack provides a faster serialisation routine than pickle, so is preferable
     for loading and deserialising large feature sets from disk."""
