@@ -81,7 +81,7 @@ def main():
                 store = ExpertStore(keylist=keylist, dim=args.dim)
                 print(store)
             serialised = pickle.dumps(store)
-            print(f"Memory needs for {store_name}: {humanize.naturalsize(len(serialised))}")
+            print(f"Memory used by {store_name}: {humanize.naturalsize(len(serialised))}")
 
 
 if __name__ == "__main__":
