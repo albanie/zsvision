@@ -10,7 +10,7 @@ import scipy.io as spio
 import numpy as np
 import msgpack_numpy as msgpack_np
 from zsvision.zs_beartype import beartype
-import zsvision.zs_data_structures import ExpertStore
+import zsvision.zs_data_structures
 
 msgpack_np.patch()
 
@@ -230,7 +230,7 @@ def concat_features(feat_paths, axis):
         merged = {}
         for key in keys:
             merged[key] = np.concatenate([x[key] for x in aggregates], axis=axis)
-    elif isinstance(aggregates[0], ExpertStore):
+    elif isinstance(aggregates[0], zsvision.zs_data_structures.ExpertStore):
         dims, stores = [], []
         keys = aggregates[0].keys
         for x in aggregates:
@@ -244,7 +244,7 @@ def concat_features(feat_paths, axis):
         msg = "expected to concatenate ExpertStores with a common dimension"
         assert len(set(dims)) == 1, msg
         dim = dims[0]
-        merged = ExpertStore(keys, dim=dim)
+        merged = zsvision.zs_data_structures.ExpertStore(keys, dim=dim)
         merged.store = np.concatenate(stores, axis=axis)
     else:
         raise ValueError(f"Unknown datastructure: {type(aggregates[0])}")
