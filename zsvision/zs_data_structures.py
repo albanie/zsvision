@@ -70,17 +70,16 @@ def main():
     parser.add_argument("--num_keys", type=int, default=100000)
     args = parser.parse_args()
     keylist = [str(x) for x in range(args.num_keys)]
-    with BlockTimer("Comparing data structures"):
-        for store_name in "dict", "np", "expert_store":
-            if store_name == "dict":
-                store = gen_dict_store(keylist=keylist, dim=args.dim)
-            elif store_name == "np":
-                store = np.random.rand(len(keylist), args.dim).astype(np.float16)
-            elif store_name == "expert_store":
-                store = ExpertStore(keylist=keylist, dim=args.dim)
-                print(store)
-            serialised = pickle.dumps(store)
-            print(f"Memory used by {store_name}: {humanize.naturalsize(len(serialised))}")
+    for store_name in "dict", "np", "expert_store":
+        if store_name == "dict":
+            store = gen_dict_store(keylist=keylist, dim=args.dim)
+        elif store_name == "np":
+            store = np.random.rand(len(keylist), args.dim).astype(np.float16)
+        elif store_name == "expert_store":
+            store = ExpertStore(keylist=keylist, dim=args.dim)
+            print(store)
+        serialised = pickle.dumps(store)
+        print(f"Memory used by {store_name}: {humanize.naturalsize(len(serialised))}")
 
 
 if __name__ == "__main__":

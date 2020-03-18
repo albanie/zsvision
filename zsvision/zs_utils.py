@@ -10,7 +10,7 @@ import scipy.io as spio
 import numpy as np
 import msgpack_numpy as msgpack_np
 from zsvision.zs_beartype import beartype
-import zsvision.zs_data_structures
+import zsvision.zs_data_structures import ExpertStore
 
 msgpack_np.patch()
 
@@ -217,6 +217,42 @@ def loadmat(filename):
 
     data = spio.loadmat(filename, struct_as_record=False, squeeze_me=True)
     return _check_keys(data)
+
+
+@functools.lru_cache(maxsize=64, typed=False)
+def concat_features(feat_paths, axis):
+    aggregates = [memcache(x) for x in feat_paths]
+    tic = time.time()
+    msg = "expected to concatenate datastructures of a single type"
+    assert len(set(type(x) for x in aggregates)) == 1, msg
+    if isinstance(aggregates[0], dict):
+        keys = aggregates[0]  # for now, we assume that all aggregates share keys
+        merged = {}
+        for key in keys:
+            merged[key] = np.concatenate([x[key] for x in aggregates], axis=axis)
+    elif isinstance(aggregates[0], ExpertStore):
+        dims, stores = [], []
+        keys = aggregates[0].keys
+        for x in aggregates:
+            dims.append(x.dim)
+            stores.append(x.store)
+            try:
+                assert x.keys == keys, "all aggregates must share identical keys"
+            except Exception as E:
+                print(E)
+                import ipdb; ipdb.set_trace()
+        msg = "expected to concatenate ExpertStores with a common dimension"
+        assert len(set(dims)) == 1, msg
+        dim = dims[0]
+        merged = ExpertStore(keys, dim=dim)
+        merged.store = np.concatenate(stores, axis=axis)
+    else:
+        raise ValueError(f"Unknown datastructure: {type(aggregates[0])}")
+    # Force memory clearance
+    for aggregate in aggregates:
+        del aggregate
+    print("done in {:.3f}s".format(time.time() - tic))
+    return merged
 
 
 class BlockTimer:
