@@ -4,20 +4,23 @@ import pickle
 import socket
 import json
 import functools
+from typing import Union
 from pathlib import Path
 import scipy.io as spio
+from typeguard import typechecked
 
 import numpy as np
 import msgpack_numpy as msgpack_np
-from zsvision.zs_beartype import beartype
 import zsvision.zs_data_structures
 
 msgpack_np.patch()
 
 
 @functools.lru_cache(maxsize=64, typed=False)
-def memcache(path):
-    suffix = Path(path).suffix
+@typechecked
+def memcache(path: Union[Path, str]):
+    path = Path(path)
+    suffix = path.suffix
     print(f"loading data from {path} ({socket.gethostname()})", end=" ", flush=True)
     tic = time.time()
     if suffix in {".pkl", ".pickle"}:
@@ -37,7 +40,7 @@ def memcache(path):
     return res
 
 
-@beartype
+@typechecked
 def support_old_pickles(buffer: bytes) -> object:
     try:
         data = pickle.loads(buffer, encoding="latin1")
@@ -48,7 +51,7 @@ def support_old_pickles(buffer: bytes) -> object:
     return data
 
 
-@beartype
+@typechecked
 def pickle_loader(pkl_path: Path, backwards_compatible: bool = True) -> object:
     """Deserialise object from pickle.
 
@@ -73,7 +76,7 @@ def pickle_loader(pkl_path: Path, backwards_compatible: bool = True) -> object:
     return data
 
 
-@beartype
+@typechecked
 def msgpack_loader(mp_path):
     """Msgpack provides a faster serialisation routine than pickle, so is preferable
     for loading and deserialising large feature sets from disk."""

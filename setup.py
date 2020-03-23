@@ -7,7 +7,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="zsvision",
-    version="0.1.3.13",
+    version="0.1.3.14",
     author="Samuel Albanie",
     description="Python utilities for computer vision",
     long_description=long_description,
@@ -19,6 +19,7 @@ setuptools.setup(
         "numpy",
         "msgpack",
         "msgpack_numpy",
+        "typeguard",
     ],
     classifiers=[
         "Operating System :: OS Independent",
