@@ -42,6 +42,14 @@ class ExpertStore:
     def __getitem__(self, key):
         return self.store[self.keymap[key]]
 
+    def todict(self):
+        """Convert the current datastructure into a vanilla python dictionary
+
+        Returns:
+            a dictionary with the same keys and values as the current object.
+        """
+        return {key: self[key] for key in self.keymap}
+
     def __len__(self):
         return len(self.keys)
 
