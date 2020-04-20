@@ -77,7 +77,7 @@ def pickle_loader(pkl_path: Path, backwards_compatible: bool = True) -> object:
 
 
 @typechecked
-def msgpack_loader(mp_path):
+def msgpack_loader(mp_path: Path):
     """Msgpack provides a faster serialisation routine than pickle, so is preferable
     for loading and deserialising large feature sets from disk."""
     tic = time.time()
