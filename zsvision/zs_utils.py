@@ -267,6 +267,7 @@ class BlockTimer:
 
     def __enter__(self):
         self.start = time.time()
+        print(f"{self.msg}...", end="", flush=True)
         return self
 
     def __exit__(self, *args):
@@ -275,4 +276,4 @@ class BlockTimer:
         else:
             total = time.strftime('%Hh%Mm%Ss', time.gmtime(time.time() - self.start))
         if not self.mute:
-            print(f"{self.msg} took {total}")
+            print(f" took {total}")
