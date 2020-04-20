@@ -72,6 +72,16 @@ def gen_dict_store(keylist, dim):
     return store
 
 
+class HashableDict(dict):
+    def __hash__(self):
+        return hash(frozenset(self))
+
+
+class HashableOrderedDict(dict):
+    def __hash__(self):
+        return hash(frozenset(self))
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dim", type=int, default=2048)
