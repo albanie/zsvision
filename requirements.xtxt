@@ -1,0 +1,4 @@
+numpy
+typeguard
+msgpack
+msgpack_numpy
