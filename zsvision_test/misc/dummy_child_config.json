@@ -1,0 +1,5 @@
+{
+    "inherit_from": "zsvision_test/misc/dummy_parent_config.json",
+    "property-b": "b-child",
+    "property-c": "c-child"
+}

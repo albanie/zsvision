@@ -4,12 +4,13 @@ import pickle
 import socket
 import json
 import functools
-from typing import Union
+from typing import Union, List, Dict
 from pathlib import Path
 import scipy.io as spio
 from typeguard import typechecked
 
 import numpy as np
+from mergedeep import Strategy, merge
 import msgpack_numpy as msgpack_np
 import zsvision.zs_data_structures
 
@@ -159,20 +160,20 @@ def set_nested_key_val(key, val, target):
     nested[subkeys[-1]] = val
 
 
-def loadmat(filename):
-    """This function should be called instead of direct spio.loadmat
-    as it cures the problem of not properly recovering python dictionaries
-    from mat files. It calls the function check keys to cure all entries
-    which are still mat-objects.
+@typechecked
+def loadmat(src_path: Path) -> Dict:
+    """This function should be called instead of direct spio.loadmat as it addresses the
+    problem of not properly recovering python dictionaries from mat files. It calls the
+    function check keys to cure all entries which are still mat-objects.
 
     The function is heavily based on this reference:
     https://stackoverflow.com/a/29126361
 
     Args:
-        filename (str): the location of the .mat file to load
-    
+        src_path: the location of the .mat file to load
+
     Returns:
-        (dict): a parsed .mat file in the form of a python dictionary.
+        a parsed .mat file in the form of a python dictionary.
     """
     def _check_keys(d):
         """Checks if entries in dictionary are mat-objects. If yes
@@ -218,7 +219,7 @@ def loadmat(filename):
                 elem_list.append(sub_elem)
         return elem_list
 
-    data = spio.loadmat(filename, struct_as_record=False, squeeze_me=True)
+    data = spio.loadmat(src_path, struct_as_record=False, squeeze_me=True)
     return _check_keys(data)
 
 
@@ -264,6 +265,7 @@ class BlockTimer:
         self.msg = msg
         self.mute = mute
         self.precise = precise
+        self.start = None
 
     def __enter__(self):
         self.start = time.time()
@@ -277,3 +279,51 @@ class BlockTimer:
             total = time.strftime('%Hh%Mm%Ss', time.gmtime(time.time() - self.start))
         if not self.mute:
             print(f" took {total}")
+
+
+@typechecked
+def find_ancestors(cfg_fname: Path) -> List[Dict]:
+    """Search the hierarchy specified by the `inherit_from` attribute of a json config
+    via post-order traversal.
+
+    Args:
+        cfg_fname: the location of the json config file
+
+    Returns:
+        a list of loaded configs in the order specified by the inheritance.
+    """
+    with open(cfg_fname, "r") as f:
+        config = json.load(f)
+    ancestors = []
+    if "inherit_from" in config:
+        immediate_ancestors = config["inherit_from"].split(",")
+        for immediate_ancestor in immediate_ancestors:
+            ancestors.extend(find_ancestors(Path(immediate_ancestor)))
+    ancestors.append(config)
+    return ancestors
+
+
+@typechecked
+def load_json_config(cfg_fname: Path) -> Dict:
+    """Load a json configuration file into memory.
+
+    Args:
+        cfg_fname: the location of the json config file
+
+    Returns:
+        the loaded configuration
+
+    NOTES: A json file may include an `inherit_from`: "<path>" key, value pair which
+    points to a list of templates from which to inherit default values.  Inheritance
+    specifiers are traversed in increasing order of importance, from left to right.
+    E.g. given
+        "inherit_from": "path-to-A,path-to-B",
+    the values of B will override the values of A.
+    """
+    ancestors = find_ancestors(cfg_fname)
+    config = ancestors.pop()
+    ancestors = reversed(ancestors)
+    for ancestor in ancestors:
+        merge(ancestor, config, strategy=Strategy.REPLACE)
+        config = ancestor
+    return config
