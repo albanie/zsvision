@@ -20,6 +20,8 @@ setuptools.setup(
         "msgpack",
         "msgpack_numpy",
         "typeguard",
+        "scipy",
+        "mergedeep",
     ],
     classifiers=[
         "Operating System :: OS Independent",
