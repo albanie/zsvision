@@ -4,3 +4,4 @@
 zsvision.egg-info/
 build/
 *.tar.gz
+.coverage
