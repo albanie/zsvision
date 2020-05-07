@@ -5,3 +5,4 @@ msgpack_numpy
 scipy
 mergedeep
 humanize
+matplotlib
