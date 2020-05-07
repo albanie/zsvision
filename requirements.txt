@@ -4,3 +4,4 @@ msgpack
 msgpack_numpy
 scipy
 mergedeep
+humanize

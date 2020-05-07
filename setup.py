@@ -22,6 +22,7 @@ setuptools.setup(
         "typeguard",
         "scipy",
         "mergedeep",
+        "humanize",
     ],
     classifiers=[
         "Operating System :: OS Independent",
