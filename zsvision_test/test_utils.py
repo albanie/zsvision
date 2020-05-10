@@ -16,6 +16,7 @@ def test_load_json_config_inheritance():
     for key, val in expected.items():
         assert config[key] == val, f"Mismatch for {key}: {config[key]} vs {val}"
 
+
 def test_seconds_to_timestr():
     expected = {
         0: "00:00:00.000",
