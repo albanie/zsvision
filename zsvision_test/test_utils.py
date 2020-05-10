@@ -20,6 +20,7 @@ def test_load_json_config_inheritance():
 def test_seconds_to_timestr():
     expected = {
         0: "00:00:00.000",
+        0.1: "00:00:00.100",
         1: "00:00:01.000",
         25 * 3600: "25:00:00.000",
     }

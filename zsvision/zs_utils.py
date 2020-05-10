@@ -346,4 +346,4 @@ def seconds_to_timestr(secs: float) -> str:
     mins, secs = divmod(secs, 60)
     hours, mins = divmod(mins, 60)
     ms = secs - int(secs)
-    return f"{hours:02d}:{mins:02d}:{secs:02d}.{int(ms * 1000):03d}"
+    return f"{int(hours):02d}:{int(mins):02d}:{int(secs):02d}.{int(ms * 1000):03d}"
