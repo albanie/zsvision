@@ -327,3 +327,23 @@ def load_json_config(cfg_fname: Path) -> Dict:
         merge(ancestor, config, strategy=Strategy.REPLACE)
         config = ancestor
     return config
+
+
+@typechecked
+def seconds_to_timestr(secs: float) -> str:
+    """Convert a total number of seconds into a formatted time string.
+
+    Arguments:
+        secs: the total number of seconds
+
+    Returns:
+        a formatted time (HH:MM:SS.mmm)
+
+    NOTE: Probably this function is not needed. But I refuse to spend more of my life
+    looking at datetime/time/strftime combinations.
+    """
+    assert secs >= 0, "Expected a non-negative number of seconds"
+    mins, secs = divmod(secs, 60)
+    hours, mins = divmod(mins, 60)
+    ms = secs - int(secs)
+    return f"{hours:02d}:{mins:02d}:{secs:02d}.{int(ms * 1000):03d}"
