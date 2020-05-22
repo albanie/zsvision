@@ -6,3 +6,5 @@ scipy
 mergedeep
 humanize
 matplotlib
+hickle
+beartype

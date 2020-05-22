@@ -23,7 +23,9 @@ setuptools.setup(
         "scipy",
         "mergedeep",
         "humanize",
-        "matplotlib"
+        "matplotlib",
+        "hickle",
+        "beartype"
     ],
     classifiers=[
         "Operating System :: OS Independent",

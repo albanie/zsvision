@@ -1,18 +1,23 @@
 import sys
+import json
 import time
 import pickle
 import socket
-import json
+import numbers
 import functools
-from typing import Union, List, Dict
+from typing import Dict, List, Union
 from pathlib import Path
-import scipy.io as spio
-from typeguard import typechecked
 
 import numpy as np
-from mergedeep import Strategy, merge
+import scipy.io as spio
 import msgpack_numpy as msgpack_np
 import zsvision.zs_data_structures
+from mergedeep import Strategy, merge
+from typeguard import typechecked
+
+import hickle
+from beartype import beartype
+from beartype.cave import AnyType
 
 msgpack_np.patch()
 
@@ -26,6 +31,8 @@ def memcache(path: Union[Path, str]):
     tic = time.time()
     if suffix in {".pkl", ".pickle"}:
         res = pickle_loader(path)
+    elif suffix in {".hkl", ".hickle"}:
+        res = hickle.load(path)
     elif suffix == ".npy":
         res = np_loader(path)
     elif suffix == ".mp":
@@ -41,7 +48,7 @@ def memcache(path: Union[Path, str]):
     return res
 
 
-@typechecked
+@beartype
 def support_old_pickles(buffer: bytes) -> object:
     try:
         data = pickle.loads(buffer, encoding="latin1")
@@ -52,7 +59,7 @@ def support_old_pickles(buffer: bytes) -> object:
     return data
 
 
-@typechecked
+@beartype
 def pickle_loader(pkl_path: Path, backwards_compatible: bool = True) -> object:
     """Deserialise object from pickle.
 
@@ -77,7 +84,7 @@ def pickle_loader(pkl_path: Path, backwards_compatible: bool = True) -> object:
     return data
 
 
-@typechecked
+@beartype
 def msgpack_loader(mp_path: Path):
     """Msgpack provides a faster serialisation routine than pickle, so is preferable
     for loading and deserialising large feature sets from disk."""
@@ -86,12 +93,13 @@ def msgpack_loader(mp_path: Path):
         buffer = f.read()
         print(f"[I/O: {time.time() - tic:.1f}s]", end=" ")
         tic = time.time()
-        data = msgpack_np.unpackb(buffer, object_hook=msgpack_np.decode, encoding="utf-8")
+        data = msgpack_np.unpackb(buffer, raw=False)
         print(f"[deserialisation: {time.time() - tic:.1f}s]", end=" ")
     return data
 
 
-def np_loader(np_path, l2norm=False):
+@beartype
+def np_loader(np_path: Path, l2norm=False):
     with open(np_path, "rb") as f:
         data = np.load(f, encoding="latin1", allow_pickle=True)
     if isinstance(data, np.ndarray) and data.size == 1:
@@ -111,7 +119,8 @@ def np_loader(np_path, l2norm=False):
     return data
 
 
-def set_nested_key_val(key, val, target):
+@beartype
+def set_nested_key_val(key: str, val: AnyType, target: dict):
     """Use a prefix key (e.g. key1.key2.key3) to set a value in a nested dict"""
 
     # escape periods in keys
@@ -160,8 +169,8 @@ def set_nested_key_val(key, val, target):
     nested[subkeys[-1]] = val
 
 
-@typechecked
-def loadmat(src_path: Path) -> Dict:
+@beartype
+def loadmat(src_path: Path) -> dict:
     """This function should be called instead of direct spio.loadmat as it addresses the
     problem of not properly recovering python dictionaries from mat files. It calls the
     function check keys to cure all entries which are still mat-objects.
@@ -303,8 +312,8 @@ def find_ancestors(cfg_fname: Path) -> List[Dict]:
     return ancestors
 
 
-@typechecked
-def load_json_config(cfg_fname: Path) -> Dict:
+@beartype
+def load_json_config(cfg_fname: Path) -> dict:
     """Load a json configuration file into memory.
 
     Args:
@@ -329,8 +338,8 @@ def load_json_config(cfg_fname: Path) -> Dict:
     return config
 
 
-@typechecked
-def seconds_to_timestr(secs: float) -> str:
+@beartype
+def seconds_to_timestr(secs: numbers.Number) -> str:
     """Convert a total number of seconds into a formatted time string.
 
     Arguments:

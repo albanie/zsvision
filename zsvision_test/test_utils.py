@@ -1,8 +1,16 @@
 """Test suite for zsvision/zs_utils.py
 """
 
+import json
+import pickle
+import tempfile
 from pathlib import Path
-from zsvision.zs_utils import load_json_config, seconds_to_timestr
+
+import numpy as np
+import msgpack_numpy as msgpack_np
+from zsvision.zs_utils import memcache, load_json_config, seconds_to_timestr
+
+import hickle
 
 
 def test_load_json_config_inheritance():
@@ -27,3 +35,59 @@ def test_seconds_to_timestr():
     for key, val in expected.items():
         ts = seconds_to_timestr(key)
         assert ts == val, f"Mismatch for {key}: {ts} vs {val}"
+
+
+def test_memcache():
+
+    def pickle_dumper(obj, path):
+        with open(path, "wb") as f:
+            pickle.dump(obj, f)
+
+    def numpy_dumper(obj, path):
+        np.save(path, obj)
+
+    def msgpack_dumper(obj, path):
+        with open(path, "wb") as f:
+            f.write(msgpack_np.packb(obj, use_bin_type=True))
+
+    def json_dumper(obj, path):
+        with open(path, "w") as f:
+            json.dump(obj, f)
+
+    storage_map = {
+        "pickle": {
+            "dumper": pickle_dumper,
+            "suffix": ".pickle",
+        },
+        "hickle": {
+            "dumper": hickle.dump,
+            "suffix": ".hickle",
+        },
+        "numpy": {
+            "dumper": numpy_dumper,
+            "suffix": ".npy",
+        },
+        "msgpack": {
+            "dumper": msgpack_dumper,
+            "suffix": ".mp",
+        },
+        "json": {
+            "dumper": json_dumper,
+            "suffix": ".json",
+        }
+    }
+    sample_data = {str(ii): np.random.rand(ii).tolist() for ii in range(10)}
+    for storage_type, subdict in storage_map.items():
+        tmp = tempfile.NamedTemporaryFile(suffix=subdict['suffix'], delete=0)
+        path = Path(tmp.name)
+        print(f"Testing memcache for {storage_type}")
+        subdict["dumper"](sample_data, path)
+        res = memcache(path)
+        msg = f"{storage_map} serialization did not preserve the underlying data"
+        for key, val in sample_data.items():
+            assert np.array_equal(val, res[key]), msg
+        path.unlink()
+
+
+if __name__ == "__main__":
+    test_memcache()
