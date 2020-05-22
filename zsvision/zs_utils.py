@@ -19,8 +19,6 @@ import hickle
 from beartype import beartype
 from beartype.cave import AnyType
 
-msgpack_np.patch()
-
 
 @functools.lru_cache(maxsize=64, typed=False)
 @typechecked
