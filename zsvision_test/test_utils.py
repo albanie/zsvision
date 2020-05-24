@@ -8,9 +8,12 @@ from pathlib import Path
 
 import numpy as np
 import msgpack_numpy as msgpack_np
-from zsvision.zs_utils import memcache, load_json_config, seconds_to_timestr
-
-import hickle
+from zsvision.zs_utils import (
+    memcache,
+    load_json_config,
+    seconds_to_timestr,
+    dump_hickle_escaped
+)
 
 
 def test_load_json_config_inheritance():
@@ -60,7 +63,7 @@ def test_memcache():
             "suffix": ".pickle",
         },
         "hickle": {
-            "dumper": hickle.dump,
+            "dumper": dump_hickle_escaped,
             "suffix": ".hickle",
         },
         "numpy": {
@@ -76,17 +79,22 @@ def test_memcache():
             "suffix": ".json",
         }
     }
-    sample_data = {str(ii): np.random.rand(ii).tolist() for ii in range(10)}
-    for storage_type, subdict in storage_map.items():
-        tmp = tempfile.NamedTemporaryFile(suffix=subdict['suffix'], delete=0)
-        path = Path(tmp.name)
-        print(f"Testing memcache for {storage_type}")
-        subdict["dumper"](sample_data, path)
-        res = memcache(path)
-        msg = f"{storage_map} serialization did not preserve the underlying data"
-        for key, val in sample_data.items():
-            assert np.array_equal(val, res[key]), msg
-        path.unlink()
+    data = [
+        [],
+        ["abc"],
+        {str(ii): np.random.rand(ii).tolist() for ii in range(10)},
+        {f"parent/{ii}": np.random.rand(ii).tolist() for ii in range(10)},
+    ]
+    for sample_data in data:
+        for storage_type, subdict in storage_map.items():
+            tmp = tempfile.NamedTemporaryFile(suffix=subdict['suffix'], delete=0)
+            path = Path(tmp.name)
+            print(f"Testing memcache for {storage_type}")
+            subdict["dumper"](sample_data, path)
+            res = memcache(path)
+            msg = f"{storage_map} serialization did not preserve: {sample_data}"
+            np.testing.assert_equal(res, sample_data), msg
+            path.unlink()
 
 
 if __name__ == "__main__":
