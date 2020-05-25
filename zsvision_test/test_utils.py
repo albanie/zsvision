@@ -12,7 +12,8 @@ from zsvision.zs_utils import (
     memcache,
     load_json_config,
     seconds_to_timestr,
-    dump_hickle_escaped
+    dump_hickle_escaped,
+    list_visible_gpu_types
 )
 
 
@@ -95,6 +96,16 @@ def test_memcache():
             msg = f"{storage_map} serialization did not preserve: {sample_data}"
             np.testing.assert_equal(res, sample_data), msg
             path.unlink()
+
+
+def test_list_visible_gpu_types():
+    KNOWN_GPUS = {
+        "GeForce GTX 1080 Ti",
+    }
+    visible_gpus = list_visible_gpu_types()
+    for visible_gpu in visible_gpus:
+        msg = f"GPU: {visible_gpu} was not a member of known gpus: {KNOWN_GPUS}"
+        assert visible_gpu in KNOWN_GPUS, msg
 
 
 if __name__ == "__main__":

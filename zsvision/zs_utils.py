@@ -4,6 +4,7 @@ import time
 import pickle
 import socket
 import numbers
+import subprocess
 import functools
 from typing import Dict, List, Union
 from pathlib import Path
@@ -421,3 +422,25 @@ def seconds_to_timestr(secs: numbers.Number) -> str:
     hours, mins = divmod(mins, 60)
     ms = secs - int(secs)
     return f"{int(hours):02d}:{int(mins):02d}:{int(secs):02d}.{int(ms * 1000):03d}"
+
+
+@typechecked
+def list_visible_gpu_types() -> List[str]:
+    """Provide a list of the NVIDIA GPUs that are visible on the current machine.
+
+    Returns:
+        a list of GPU device types.
+    """
+    cmd = ["nvidia-smi", "-L"]
+    try:
+        res = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                             check=True)
+        device_strs = res.stdout.decode("utf-8").splitlines()
+        devices = [x.split(":")[1].split("(")[0].strip() for x in device_strs]
+    except FileNotFoundError:
+        devices = []
+    return devices
+
+
+if __name__ == "__main__":
+    print(list_visible_gpu_types())
