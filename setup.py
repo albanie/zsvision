@@ -1,3 +1,7 @@
+"""
+python3 setup.py sdist bdist_wheel
+twine upload --skip-existing dist/*
+"""
 import setuptools
 
 
@@ -7,7 +11,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="zsvision",
-    version="0.5.4",
+    version="0.5.5",
     author="Samuel Albanie",
     description="Python utilities for computer vision",
     long_description=long_description,
@@ -24,7 +28,7 @@ setuptools.setup(
         "mergedeep",
         "humanize",
         "matplotlib",
-        "beartype"
+        "beartype",
         "hickle>=4.0.0",
     ],
     classifiers=[
