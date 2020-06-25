@@ -4,21 +4,20 @@ import time
 import pickle
 import socket
 import numbers
-import subprocess
 import functools
+import subprocess
 from typing import Dict, List, Union
 from pathlib import Path
 
 import numpy as np
+import hickle
 import scipy.io as spio
 import msgpack_numpy as msgpack_np
-import zsvision.zs_data_structures
 from beartype import beartype
 from mergedeep import Strategy, merge
 from typeguard import typechecked
 from beartype.cave import AnyType
-
-import zsvision.hickle_extension as hickle_extension
+import zsvision.zs_data_structures
 
 
 @functools.lru_cache(maxsize=64, typed=False)
@@ -31,7 +30,7 @@ def memcache(path: Union[Path, str]):
     if suffix in {".pkl", ".pickle"}:
         res = pickle_loader(path)
     elif suffix in {".hkl", ".hickle"}:
-        res = load_hickle(path, escape_slash=True)
+        res = hickle.load(path)
     elif suffix == ".npy":
         res = np_loader(path)
     elif suffix == ".mp":
@@ -48,78 +47,11 @@ def memcache(path: Union[Path, str]):
 
 
 @beartype
-def dump_hickle_escaped(py_obj: AnyType, file_obj: Path):
-    """A convenience wrapper around dump_hickle() which escapes slashes in dictionary
-    names by default.
-
-    Args:
-        py_obj: python object to store in a Hickle.
-        file_obj: path where the object should be stored.
-    """
-    dump_hickle(py_obj=py_obj, file_obj=file_obj, escape_slash=True)
-
-
-def dump_hickle(py_obj, file_obj, mode='w', track_times=True, path='/',
-                escape_slash=False, **kwargs):
-    """A simple wrapper around hickle.dump() that adds the ability to escape slashes from
-    python dictionary keys. This is enabled by setting `escape_slash=True`. All other
-    options follow hickle.dump() - these are copied below:
-
-    Write a pickled representation of obj to the open file object file.
-    Args:
-    obj (object): python object o store in a Hickle
-    file: file object, filename string, or h5py.File object
-            file in which to store the object. A h5py.File or a filename is also
-            acceptable.
-    mode (str): optional argument, 'r' (read only), 'w' (write) or 'a' (append).
-            Ignored if file is a file object.
-    compression (str): optional argument. Applies compression to dataset. Options: None,
-            gzip, lzf (+ szip, if installed)
-    track_times (bool): optional argument. If set to False, repeated hickling will produce
-            identical files.
-    path (str): path within hdf5 file to save data to. Defaults to root /
-    escape_slash (bool :: False): whether to escape slashes in dictionary keys.
-    """
-    hickle_extension.dump_wrapper(
-        py_obj=py_obj,
-        file_obj=file_obj,
-        mode=mode,
-        path=path,
-        track_times=track_times,
-        escape_slash=escape_slash,
-        **kwargs,
-    )
-
-
-def load_hickle(fileobj, path="/", safe=True, escape_slash=False):
-    """A simple wrapper around hickle.load() that adds the ability to escape slashes from
-    python dictionary keys. This is enabled by setting `escape_slash=True`. All other
-    options follow hickle.load() - these are copied below:
-
-    Args:
-        fileobj: file object, h5py.File, or filename string
-            safe (bool): Disable automatic depickling of arbitrary python objects.
-            DO NOT set this to False unless the file is from a trusted source.
-            (see http://www.cs.jhu.edu/~s/musings/pickle.html for an explanation)
-
-        path (str): path within hdf5 file to save data to. Defaults to root /
-
-    Hickle licence: https://github.com/telegraphic/hickle/blob/master/LICENSE
-    """
-    return hickle_extension.load_wrapper(
-        fileobj=fileobj,
-        path=path,
-        safe=safe,
-        escape_slash=escape_slash,
-    )
-
-
-@beartype
 def support_old_pickles(buffer: bytes) -> object:
     try:
         data = pickle.loads(buffer, encoding="latin1")
     except ModuleNotFoundError as exception:
-        if "datastructures" in exception.msg:
+        if "datastructures" in str(exception.msg):
             sys.modules['datastructures'] = zsvision.zs_data_structures
             data = pickle.loads(buffer, encoding="latin1")
     return data

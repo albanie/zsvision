@@ -6,13 +6,13 @@ import pickle
 import tempfile
 from pathlib import Path
 
+import hickle
 import numpy as np
 import msgpack_numpy as msgpack_np
 from zsvision.zs_utils import (
     memcache,
     load_json_config,
     seconds_to_timestr,
-    dump_hickle_escaped,
     list_visible_gpu_types
 )
 
@@ -58,13 +58,16 @@ def test_memcache():
         with open(path, "w") as f:
             json.dump(obj, f)
 
+    def hickle_dumper(obj, path):
+        hickle.dump(obj, path)
+
     storage_map = {
         "pickle": {
             "dumper": pickle_dumper,
             "suffix": ".pickle",
         },
         "hickle": {
-            "dumper": dump_hickle_escaped,
+            "dumper": hickle_dumper,
             "suffix": ".hickle",
         },
         "numpy": {
