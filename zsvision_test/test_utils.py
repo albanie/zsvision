@@ -13,7 +13,8 @@ from zsvision.zs_utils import (
     memcache,
     load_json_config,
     seconds_to_timestr,
-    list_visible_gpu_types
+    list_visible_gpu_types,
+    quote_and_escape_ffmpeg_path
 )
 
 
@@ -111,5 +112,18 @@ def test_list_visible_gpu_types():
         assert visible_gpu in KNOWN_GPUS, msg
 
 
+def test_quote_and_escape_ffmpeg_path():
+    test_cases = (
+        {"input": "/a/b/c.ext", "expected": "'/a/b/c.ext'"},
+        {"input": "/a/b/c d.ext", "expected": "'/a/b/c d.ext'"},
+        {"input": "/a/b/c'd.ext", "expected": '"/a/b/c\'d.ext"'},
+        {"input": "/a/b/c$d.ext", "expected": r"'/a/b/c\$d.ext'"},
+    )
+    for test_case in test_cases:
+        output = quote_and_escape_ffmpeg_path(test_case["input"])
+        msg = f"Expected {test_case['expected']}, but found {output}"
+        assert output == test_case["expected"], msg
+
+
 if __name__ == "__main__":
-    test_memcache()
+    test_quote_and_escape_ffmpeg_path()
