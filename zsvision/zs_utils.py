@@ -376,7 +376,7 @@ def list_visible_gpu_types() -> List[str]:
 
 @typechecked
 def quote_and_escape_ffmpeg_path(path: (str, Path)) -> str:
-    """Quote paths for use with ffmpeg/ffprobe.
+    """Quote and escape paths for use with ffmpeg/ffprobe.
 
     Args:
         path: the location of a file to be processed by ffmpeg
@@ -384,13 +384,17 @@ def quote_and_escape_ffmpeg_path(path: (str, Path)) -> str:
     Returns:
         a quoted, dollar-escaped path
 
-    NOTE: This function is useful for processing file paths that may contain spaces or
-    dollar characters when invoking ffmpeg or ffprobe from python. Example usage for a
-    path to an input file:
+    Example usage:
         `os.system("ffprobe {quote_and_escape_ffmpeg_path(path)}")`
+
+    NOTE: This function is useful for processing file paths that may contain:
+        1. spaces
+        2. dollar characters ($)
+        3. percent sign characters (%)
+    when invoking ffmpeg or ffprobe from python.
     """
     # Dollar signs need to be escaped when used in paths
-    escaped = str(path).replace("$", r"\$")
+    escaped = str(path).replace("$", r"\$").replace("%", r"\%")
     if "'" in escaped:
         quoted = f'"{escaped}"'
     else:

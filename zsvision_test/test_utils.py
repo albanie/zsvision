@@ -118,6 +118,7 @@ def test_quote_and_escape_ffmpeg_path():
         {"input": "/a/b/c d.ext", "expected": "'/a/b/c d.ext'"},
         {"input": "/a/b/c'd.ext", "expected": '"/a/b/c\'d.ext"'},
         {"input": "/a/b/c$d.ext", "expected": r"'/a/b/c\$d.ext'"},
+        {"input": "/a/b/c%d.ext", "expected": r"'/a/b/c\%d.ext'"},
     )
     for test_case in test_cases:
         output = quote_and_escape_ffmpeg_path(test_case["input"])
