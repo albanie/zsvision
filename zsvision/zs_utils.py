@@ -5,6 +5,7 @@ import pickle
 import socket
 import numbers
 import functools
+import unicodedata
 import subprocess
 from typing import Dict, List, Union
 from pathlib import Path
@@ -374,7 +375,7 @@ def list_visible_gpu_types() -> List[str]:
     return devices
 
 
-@typechecked
+@beartype
 def quote_and_escape_ffmpeg_path(path: (str, Path)) -> str:
     """Quote and escape paths for use with ffmpeg/ffprobe.
 
@@ -400,6 +401,78 @@ def quote_and_escape_ffmpeg_path(path: (str, Path)) -> str:
     else:
         quoted = f"'{escaped}'"
     return quoted
+
+
+@beartype
+def parse_tree_layout(
+        tree_layout_path: Path,
+        prefix_token: str = "── ",
+) -> set:
+    """Given a text dump of the output of the linux `tree` command, this function will
+    reconstruct the relative paths of the files in the tree.
+
+    Args:
+        tree_layout_path: the location of the text file containing the `tree` output
+        prefix_token: the token used by the `tree` command to denote a new file.
+
+    Returns:
+        the collection of parsed paths.
+
+    NOTES:
+    1. This function assumes that it is parsing the output of the tree command that
+    has been run in the directory of the structure it is displaying (i.e. `tree` is run)
+    without arguments.
+    2. The output of each row in the `tree` command is prefixed by a T-bar or an L-bar
+    (see example formats (1) and (2) resp. below).
+    3. If the file at `tree_layout_path` contains any rows that are not part of the tree
+    output, they are ignored.
+
+    Example:
+        Given tree outputs of the forms (1) or (2) shown below:
+
+        (1)
+            ├── Conversation
+            │   ├── Belfast
+            │   │   ├── 11+12
+
+        (2)
+            └── Conversation
+                └── Belfast
+                    └── 11+12
+
+        in both cases, this function will return a set of pathlib paths of the form:
+
+        {
+            "."
+            "Conversation",
+            "Conversation/Belfast",
+            "Conversation/Belfast/11+12",
+        }
+
+    """
+    with open(tree_layout_path, "r") as f:
+        rows = f.read().splitlines()
+
+    # filter the input to only contain the file tree structure by searching for the
+    # presence of the tree prefix token
+    rows = [x for x in rows if prefix_token in x]
+
+    # convert nbsp escape codes into spaces
+    rows = [unicodedata.normalize("NFKD", x) for x in rows]
+
+    current_path = Path(".")
+    paths = {current_path}
+    known_prefix_heads = {"├", "└"}
+    for row in rows:
+        prefix, name = row.split(prefix_token)
+        prefix, prefix_head = prefix[:-1], list(prefix).pop(-1)
+        msg = f"Expected prefix head to be in {known_prefix_heads} found {prefix_head}"
+        assert prefix_head in known_prefix_heads, msg
+        assert len(prefix) % 4 == 0, "Expected prefix string length to be a multiple of 4"
+        depth = int(len(prefix) / 4)
+        current_path = Path(*current_path.parts[:depth]) / name
+        paths.add(current_path)
+    return paths
 
 
 if __name__ == "__main__":

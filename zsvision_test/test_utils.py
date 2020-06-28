@@ -1,8 +1,10 @@
 """Test suite for zsvision/zs_utils.py
 """
 
+import os
 import json
 import pickle
+import shutil
 import tempfile
 from pathlib import Path
 
@@ -14,7 +16,8 @@ from zsvision.zs_utils import (
     load_json_config,
     seconds_to_timestr,
     list_visible_gpu_types,
-    quote_and_escape_ffmpeg_path
+    quote_and_escape_ffmpeg_path,
+    parse_tree_layout
 )
 
 
@@ -126,5 +129,45 @@ def test_quote_and_escape_ffmpeg_path():
         assert output == test_case["expected"], msg
 
 
+def test_parse_tree_layout():
+    test_cases = (
+        (
+            "a/b/c.ext",
+        ),
+        (
+            "a/b/c.ext",
+            "a/b/d.ext",
+        ),
+        (
+            "a/b/c.ext",
+            "a/b/c/d.ext",
+            "a/b/c/d/e.ext",
+        ),
+        (
+            "a /b /c .ext",
+        ),
+    )
+    tmp_tree_output = tempfile.NamedTemporaryFile(delete=False)
+    cwd = Path.cwd()
+    for test_case in test_cases:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            for rel_path in test_case:
+                path = Path(tmp_dir) / rel_path
+                path.parent.mkdir(exist_ok=True, parents=True)
+                path.touch()
+            # Move to the temporary directory to create a relative path strcuture
+            os.system(f"cd {tmp_dir}; tree > {tmp_tree_output.name} ; cd {cwd}")
+            layout = parse_tree_layout(Path(tmp_tree_output.name))
+
+            expected = set()
+            for rel_path in test_case:
+                for prefix_length in range(len(rel_path)):
+                    expected.add(Path(*(Path(rel_path).parts[:prefix_length])))
+
+            assert expected == layout, f"Expected {layout} to match {expected}"
+    os.unlink(tmp_tree_output.name)
+
+
 if __name__ == "__main__":
     test_quote_and_escape_ffmpeg_path()
+    test_parse_tree_layout()
