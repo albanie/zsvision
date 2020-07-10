@@ -5,6 +5,7 @@ import pickle
 import socket
 import numbers
 import functools
+import logging
 import unicodedata
 import subprocess
 from typing import Dict, List, Union
@@ -17,7 +18,7 @@ import msgpack_numpy as msgpack_np
 from beartype import beartype
 from mergedeep import Strategy, merge
 from typeguard import typechecked
-from beartype.cave import AnyType
+from beartype.cave import AnyType, NoneTypeOr
 import zsvision.zs_data_structures
 
 
@@ -269,15 +270,27 @@ def concat_features(feat_paths, axis):
 
 class BlockTimer:
     """A minimal inline codeblock timer"""
-    def __init__(self, msg, precise=False, mute=False):
+    @beartype
+    def __init__(
+            self,
+            msg: str,
+            mute: bool = False,
+            precise: bool = False,
+            logger: NoneTypeOr[logging.Logger] = False,
+    ):
         self.msg = msg
         self.mute = mute
         self.precise = precise
+        self.logger = logger
         self.start = None
 
     def __enter__(self):
         self.start = time.time()
-        print(f"{self.msg}...", end="", flush=True)
+        msg = f"{self.msg}..."
+        if self.logger:
+            self.logger.info(msg)
+        else:
+            print(msg, end="", flush=True)
         return self
 
     def __exit__(self, *args):
@@ -286,7 +299,11 @@ class BlockTimer:
         else:
             total = time.strftime('%Hh%Mm%Ss', time.gmtime(time.time() - self.start))
         if not self.mute:
-            print(f" took {total}")
+            msg = f" took {total}"
+            if self.logger:
+                self.logger.info(msg)
+            else:
+                print(msg)
 
 
 @typechecked

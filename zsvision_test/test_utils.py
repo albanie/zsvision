@@ -4,20 +4,21 @@
 import os
 import json
 import pickle
-import shutil
+import logging
 import tempfile
 from pathlib import Path
 
-import hickle
 import numpy as np
+import hickle
 import msgpack_numpy as msgpack_np
 from zsvision.zs_utils import (
+    BlockTimer,
     memcache,
     load_json_config,
+    parse_tree_layout,
     seconds_to_timestr,
     list_visible_gpu_types,
-    quote_and_escape_ffmpeg_path,
-    parse_tree_layout
+    quote_and_escape_ffmpeg_path
 )
 
 
@@ -168,6 +169,17 @@ def test_parse_tree_layout():
     os.unlink(tmp_tree_output.name)
 
 
+def test_BlockTimer():
+    with BlockTimer(msg="testing block timer"):
+        pass
+    logger = logging.getLogger(name="dummy logger")
+    logging.basicConfig()
+    logger.setLevel(logging.INFO)
+    with BlockTimer(msg="testing block timer with logger", logger=logger):
+        pass
+
+
 if __name__ == "__main__":
     test_quote_and_escape_ffmpeg_path()
     test_parse_tree_layout()
+    test_BlockTimer()
