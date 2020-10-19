@@ -96,14 +96,15 @@ def test_memcache():
     ]
     for sample_data in data:
         for storage_type, subdict in storage_map.items():
-            tmp = tempfile.NamedTemporaryFile(suffix=subdict['suffix'], delete=0)
-            path = Path(tmp.name)
-            print(f"Testing memcache for {storage_type}")
-            subdict["dumper"](sample_data, path)
-            res = memcache(path)
-            msg = f"{storage_map} serialization did not preserve: {sample_data}"
-            np.testing.assert_equal(res, sample_data), msg
-            path.unlink()
+            for verbose in (True, False):
+                tmp = tempfile.NamedTemporaryFile(suffix=subdict['suffix'], delete=0)
+                path = Path(tmp.name)
+                print(f"Testing memcache (verbose: {verbose}) for {storage_type}")
+                subdict["dumper"](sample_data, path)
+                res = memcache(path, verbose=verbose)
+                msg = f"{storage_map} serialization did not preserve: {sample_data}"
+                np.testing.assert_equal(res, sample_data), msg
+                path.unlink()
 
 
 def test_list_visible_gpu_types():

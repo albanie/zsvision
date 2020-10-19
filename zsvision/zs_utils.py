@@ -80,13 +80,15 @@ def pickle_loader(
     tic = time.time()
     with open(pkl_path, "rb") as f:
         buffer = f.read()
-        print(f"[I/O: {time.time() - tic:.1f}s]", end=" ")
+        if verbose:
+            print(f"[I/O: {time.time() - tic:.1f}s]", end=" ")
         tic = time.time()
         if backwards_compatible:
             data = support_old_pickles(buffer)
         else:
             data = pickle.loads(buffer, encoding="latin1")
-        print(f"[deserialisation: {time.time() - tic:.1f}s]", end=" ")
+        if verbose:
+            print(f"[deserialisation: {time.time() - tic:.1f}s]", end=" ")
     return data
 
 
