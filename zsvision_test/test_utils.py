@@ -183,3 +183,4 @@ if __name__ == "__main__":
     test_quote_and_escape_ffmpeg_path()
     test_parse_tree_layout()
     test_BlockTimer()
+    test_memcache()

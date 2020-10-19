@@ -23,20 +23,21 @@ import zsvision.zs_data_structures
 
 
 @functools.lru_cache(maxsize=64, typed=False)
-@typechecked
-def memcache(path: Union[Path, str]):
+@beartype
+def memcache(path: Union[Path, str], verbose: bool = True):
     path = Path(path)
     suffix = path.suffix
-    print(f"loading data from {path} ({socket.gethostname()})", end=" ", flush=True)
+    if verbose:
+        print(f"loading data from {path} ({socket.gethostname()})", end=" ", flush=True)
     tic = time.time()
     if suffix in {".pkl", ".pickle", ".pckl"}:
-        res = pickle_loader(path)
+        res = pickle_loader(pkl_path=path, verbose=verbose)
     elif suffix in {".hkl", ".hickle"}:
         res = hickle.load(path)
     elif suffix == ".npy":
-        res = np_loader(path)
+        res = np_loader(path, verbose=verbose)
     elif suffix == ".mp":
-        res = msgpack_loader(path)
+        res = msgpack_loader(path, verbose=verbose)
     elif suffix == ".json":
         with open(path, "r") as f:
             res = json.load(f)
@@ -44,7 +45,8 @@ def memcache(path: Union[Path, str]):
         res = loadmat(path)
     else:
         raise ValueError(f"unknown suffix: {suffix} for path {path}")
-    print(f"[Total: {time.time() - tic:.1f}s]")
+    if verbose:
+        print(f"[Total: {time.time() - tic:.1f}s]")
     return res
 
 
@@ -60,7 +62,11 @@ def support_old_pickles(buffer: bytes) -> object:
 
 
 @beartype
-def pickle_loader(pkl_path: Path, backwards_compatible: bool = True) -> object:
+def pickle_loader(
+        pkl_path: Path,
+        verbose: bool,
+        backwards_compatible: bool = True,
+) -> object:
     """Deserialise object from pickle.
 
     Args:
@@ -85,27 +91,30 @@ def pickle_loader(pkl_path: Path, backwards_compatible: bool = True) -> object:
 
 
 @beartype
-def msgpack_loader(mp_path: Path):
+def msgpack_loader(mp_path: Path, verbose: bool):
     """Msgpack provides a faster serialisation routine than pickle, so is preferable
     for loading and deserialising large feature sets from disk."""
     tic = time.time()
     with open(mp_path, "rb") as f:
         buffer = f.read()
-        print(f"[I/O: {time.time() - tic:.1f}s]", end=" ")
+        if verbose:
+            print(f"[I/O: {time.time() - tic:.1f}s]", end=" ")
         tic = time.time()
         data = msgpack_np.unpackb(buffer, raw=False)
-        print(f"[deserialisation: {time.time() - tic:.1f}s]", end=" ")
+        if verbose:
+            print(f"[deserialisation: {time.time() - tic:.1f}s]", end=" ")
     return data
 
 
 @beartype
-def np_loader(np_path: Path, l2norm=False):
+def np_loader(np_path: Path, verbose: bool, l2norm: bool = False):
     with open(np_path, "rb") as f:
         data = np.load(f, encoding="latin1", allow_pickle=True)
     if isinstance(data, np.ndarray) and data.size == 1:
         data = data[()]  # handle numpy dict storage convnetion
     if l2norm:
-        print("L2 normalizing features")
+        if verbose:
+            print("L2 normalizing features")
         if isinstance(data, dict):
             for key in data:
                 feats_ = data[key]
