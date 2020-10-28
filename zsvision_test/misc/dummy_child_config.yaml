@@ -1,0 +1,3 @@
+inherit_from: "zsvision_test/misc/dummy_parent_config.yaml"
+property-b: "b-child"
+property-c: "c-child"

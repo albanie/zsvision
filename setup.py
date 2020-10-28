@@ -1,4 +1,5 @@
 """
+coverage run --source=. -m py.test
 python3 setup.py sdist bdist_wheel
 twine upload --skip-existing dist/*
 """
@@ -11,7 +12,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="zsvision",
-    version="0.6.11",
+    version="0.6.12",
     author="Samuel Albanie",
     description="Python utilities for computer vision",
     long_description=long_description,
@@ -30,6 +31,7 @@ setuptools.setup(
         "matplotlib",
         "beartype",
         "hickle>=4.0.0",
+        "pyyaml",
     ],
     classifiers=[
         "Operating System :: OS Independent",

@@ -10,6 +10,7 @@ import unicodedata
 import subprocess
 from typing import Dict, List, Union
 from pathlib import Path
+import yaml
 
 import numpy as np
 import hickle
@@ -41,6 +42,9 @@ def memcache(path: Union[Path, str], verbose: bool = True):
     elif suffix == ".json":
         with open(path, "r") as f:
             res = json.load(f)
+    elif suffix in {".yaml", ".yml"}:
+        with open(path, "r") as f:
+            res = yaml.safe_load(f)
     elif suffix == ".mat":
         res = loadmat(path)
     else:
@@ -328,8 +332,7 @@ def find_ancestors(cfg_fname: Path) -> List[Dict]:
     Returns:
         a list of loaded configs in the order specified by the inheritance.
     """
-    with open(cfg_fname, "r") as f:
-        config = json.load(f)
+    config = memcache(cfg_fname)
     ancestors = []
     if "inherit_from" in config:
         immediate_ancestors = config["inherit_from"].split(",")
@@ -337,6 +340,25 @@ def find_ancestors(cfg_fname: Path) -> List[Dict]:
             ancestors.extend(find_ancestors(Path(immediate_ancestor)))
     ancestors.append(config)
     return ancestors
+
+
+@beartype
+def load_json_or_yaml_config(cfg_fname: Path) -> dict:
+    """Load a configuration file into memory.
+
+    Args:
+        cfg_fname: the location of the config file (yaml or json)
+
+    Returns:
+        the loaded configuration
+    """
+    ancestors = find_ancestors(cfg_fname)
+    config = ancestors.pop()
+    ancestors = reversed(ancestors)
+    for ancestor in ancestors:
+        merge(ancestor, config, strategy=Strategy.REPLACE)
+        config = ancestor
+    return config
 
 
 @beartype
@@ -356,13 +378,27 @@ def load_json_config(cfg_fname: Path) -> dict:
         "inherit_from": "path-to-A,path-to-B",
     the values of B will override the values of A.
     """
-    ancestors = find_ancestors(cfg_fname)
-    config = ancestors.pop()
-    ancestors = reversed(ancestors)
-    for ancestor in ancestors:
-        merge(ancestor, config, strategy=Strategy.REPLACE)
-        config = ancestor
-    return config
+    return load_json_or_yaml_config(cfg_fname)
+
+
+@beartype
+def load_yaml_config(cfg_fname: Path) -> dict:
+    """Load a yaml configuration file into memory.
+
+    Args:
+        cfg_fname: the location of the yaml config file
+
+    Returns:
+        the loaded configuration
+
+    NOTES: A yaml file may include an `inherit_from`: "<path>" key, value pair which
+    points to a list of templates from which to inherit default values.  Inheritance
+    specifiers are traversed in increasing order of importance, from left to right.
+    E.g. given
+        "inherit_from": "path-to-A,path-to-B",
+    the values of B will override the values of A.
+    """
+    return load_json_or_yaml_config(cfg_fname)
 
 
 @beartype

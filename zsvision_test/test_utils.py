@@ -15,6 +15,7 @@ from zsvision.zs_utils import (
     BlockTimer,
     memcache,
     load_json_config,
+    load_yaml_config,
     parse_tree_layout,
     seconds_to_timestr,
     list_visible_gpu_types,
@@ -25,6 +26,18 @@ from zsvision.zs_utils import (
 def test_load_json_config_inheritance():
     child_config_path = Path("zsvision_test/misc/dummy_child_config.json")
     config = load_json_config(child_config_path)
+    expected = {
+        "property-a": "a-parent",
+        "property-b": "b-child",
+        "property-c": "c-child"
+    }
+    for key, val in expected.items():
+        assert config[key] == val, f"Mismatch for {key}: {config[key]} vs {val}"
+
+
+def test_load_yaml_config_inheritance():
+    child_config_path = Path("zsvision_test/misc/dummy_child_config.yaml")
+    config = load_yaml_config(child_config_path)
     expected = {
         "property-a": "a-parent",
         "property-b": "b-child",
@@ -185,3 +198,5 @@ if __name__ == "__main__":
     test_parse_tree_layout()
     test_BlockTimer()
     test_memcache()
+    test_load_json_config_inheritance()
+    test_load_yaml_config_inheritance()

@@ -8,3 +8,4 @@ humanize
 matplotlib
 hickle
 beartype
+pyyaml
