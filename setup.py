@@ -12,7 +12,7 @@ with open("README.md", "r") as f:
 
 setuptools.setup(
     name="zsvision",
-    version="0.6.17",
+    version="0.6.18",
     author="Samuel Albanie",
     description="Python utilities for computer vision",
     long_description=long_description,
@@ -29,7 +29,7 @@ setuptools.setup(
         "mergedeep",
         "humanize",
         "matplotlib",
-        "beartype",
+        "beartype>=0.3.2",
         "hickle>=4.0.0",
         "pyyaml",
     ],
