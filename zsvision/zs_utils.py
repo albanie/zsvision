@@ -321,8 +321,8 @@ class BlockTimer:
                 print(msg)
 
 
-@typechecked
-def find_ancestors(cfg_fname: Path) -> List[Dict]:
+@beartype
+def find_ancestors(cfg_fname: Path) -> list:
     """Search the hierarchy specified by the `inherit_from` attribute of a json config
     via post-order traversal.
 
