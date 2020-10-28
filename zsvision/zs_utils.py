@@ -321,7 +321,7 @@ class BlockTimer:
                 print(msg)
 
 
-@beartype
+# NOTE: Do not use type checking on the recursion
 def find_ancestors(cfg_fname: (Path, str)) -> list:
     """Search the hierarchy specified by the `inherit_from` attribute of a json config
     via post-order traversal.
