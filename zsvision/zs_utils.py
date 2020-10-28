@@ -322,7 +322,7 @@ class BlockTimer:
 
 
 @beartype
-def find_ancestors(cfg_fname: Path) -> list:
+def find_ancestors(cfg_fname: (Path, str)) -> list:
     """Search the hierarchy specified by the `inherit_from` attribute of a json config
     via post-order traversal.
 
@@ -343,7 +343,7 @@ def find_ancestors(cfg_fname: Path) -> list:
 
 
 @beartype
-def load_json_or_yaml_config(cfg_fname: Path) -> dict:
+def load_json_or_yaml_config(cfg_fname: (Path, str)) -> dict:
     """Load a configuration file into memory.
 
     Args:
