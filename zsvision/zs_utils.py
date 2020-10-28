@@ -321,7 +321,7 @@ class BlockTimer:
                 print(msg)
 
 
-# NOTE: Do not use type checking on the recursion
+@beartype
 def find_ancestors(cfg_fname: (Path, str)) -> list:
     """Search the hierarchy specified by the `inherit_from` attribute of a json config
     via post-order traversal.
@@ -332,7 +332,15 @@ def find_ancestors(cfg_fname: (Path, str)) -> list:
     Returns:
         a list of loaded configs in the order specified by the inheritance.
     """
-    config = memcache(cfg_fname)
+    # Cannot use memcache here without risk of recursion
+    if Path(cfg_fname).suffix == ".json":
+        with open(cfg_fname, "r") as f:
+            config = json.load(f)
+    elif Path(cfg_fname).suffix in {".yaml", ".yml"}:
+        with open(cfg_fname, "r") as f:
+            config = yaml.safe_load(f)
+    else:
+        raise ValueError(f"Unknown config path type: {cfg_fname}")
     ancestors = []
     if "inherit_from" in config:
         immediate_ancestors = config["inherit_from"].split(",")
