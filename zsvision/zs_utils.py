@@ -362,7 +362,7 @@ def load_json_or_yaml_config(cfg_fname: (Path, str)) -> dict:
 
 
 @beartype
-def load_json_config(cfg_fname: Path) -> dict:
+def load_json_config(cfg_fname: (Path, str)) -> dict:
     """Load a json configuration file into memory.
 
     Args:
@@ -382,7 +382,7 @@ def load_json_config(cfg_fname: Path) -> dict:
 
 
 @beartype
-def load_yaml_config(cfg_fname: Path) -> dict:
+def load_yaml_config(cfg_fname: (Path, str)) -> dict:
     """Load a yaml configuration file into memory.
 
     Args:
