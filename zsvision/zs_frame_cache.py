@@ -124,7 +124,7 @@ class ContigFrameCache:
             self.video_cap = cv2.VideoCapture(str(video_path))
         else:
             raise ValueError(f"Unknown backend: {backend}")
-        if pad_last not in {"no_pad", "copy_last"}:
+        if pad_last not in {"no_pad", "zero_pad", "copy_last"}:
             raise ValueError(f"Unknown pad_last strategy: {pad_last}")
 
         self.num_cache_frames = num_cache_frames
@@ -165,10 +165,14 @@ class ContigFrameCache:
             raise FrameOutOfBoundsError("When no_pad strategy is used cannot request end "
                                         f"frame {end_frame} beyond the total video length "
                                         f" ({self.total_video_frames} frames)")
-        if self.pad_last == "copy_last" and start_frame >= self.total_video_frames:
-            raise FrameOutOfBoundsError("When copy_last strategy is used cannot request "
-                                        f"start frame {start_frame} beyond the total video "
-                                        f"length ({self.total_video_frames} frames)")
+        if (
+            self.pad_last in {"zero_pad", "copy_last"}
+                and start_frame >= self.total_video_frames
+        ):
+            raise FrameOutOfBoundsError(f"When {self.pad_last} strategy is used cannot "
+                                        f"request start frame {start_frame} beyond the "
+                                        f" total video length ({self.total_video_frames} "
+                                        "frames)")
 
         if self.head_ptr is None:
             return False
@@ -176,7 +180,7 @@ class ContigFrameCache:
         last_cache_frame = self.head_ptr + self.num_cache_frames
         if self.pad_last == "no_pad":
             hit = start_frame >= self.head_ptr and end_frame <= last_cache_frame
-        elif self.pad_last == "copy_last":
+        elif self.pad_last in {"zero_pad", "copy_last"}:
             hit = self.head_ptr <= start_frame <= last_cache_frame
         return hit
 
@@ -294,7 +298,7 @@ class ContigFrameCache:
                 num_seqs = 1 + (self.total_video_frames - sequence_length) / sequence_stride
                 num_seqs = int(np.floor(num_seqs))
 
-        elif self.pad_last == "copy_last":
+        elif self.pad_last in {"zero_pad", "copy_last"}:
             num_seqs = int(np.ceil(self.total_video_frames / sequence_stride))
         return num_seqs
 
@@ -321,6 +325,8 @@ class ContigFrameCache:
                         f"Attempted to read frame {frame_idx + start_idx + self.head_ptr}, "
                         " beyond the end of the video"
                     )
+                elif self.pad_last == "zero_pad":
+                    im = prev_im * 0
                 elif self.pad_last == "copy_last":
                     im = prev_im
 

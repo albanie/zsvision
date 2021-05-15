@@ -21,6 +21,10 @@ def test_num_sequence_computer():
         ({"frames": 3, "seq_length": 3, "seq_stride": 1, "pad_last": "no_pad"}, 1),
         ({"frames": 4, "seq_length": 3, "seq_stride": 1, "pad_last": "no_pad"}, 2),
 
+        ({"frames": 0, "seq_length": 3, "seq_stride": 1, "pad_last": "zero_pad"}, 0),
+        ({"frames": 2, "seq_length": 3, "seq_stride": 1, "pad_last": "zero_pad"}, 2),
+        ({"frames": 2, "seq_length": 50, "seq_stride": 1, "pad_last": "zero_pad"}, 2),
+
         ({"frames": 0, "seq_length": 3, "seq_stride": 1, "pad_last": "copy_last"}, 0),
         ({"frames": 2, "seq_length": 3, "seq_stride": 1, "pad_last": "copy_last"}, 2),
         ({"frames": 2, "seq_length": 50, "seq_stride": 1, "pad_last": "copy_last"}, 2),
@@ -54,6 +58,11 @@ def test_fetched_frames():
             [[0, 1, 2], [1, 2, 3]]),
         ({"frames": 5, "seq_length": 3, "seq_stride": 1, "pad_last": "no_pad"},
             [[0, 1, 2], [1, 2, 3], [2, 3, 4]]),
+
+        ({"frames": 3, "seq_length": 3, "seq_stride": 1, "pad_last": "zero_pad"},
+            [[0, 1, 2], [1, 2, 0], [2, 0, 0]]),
+        ({"frames": 3, "seq_length": 3, "seq_stride": 2, "pad_last": "zero_pad"},
+            [[0, 1, 2], [2, 0, 0]]),
 
         ({"frames": 3, "seq_length": 3, "seq_stride": 1, "pad_last": "copy_last"},
             [[0, 1, 2], [1, 2, 2], [2, 2, 2]]),
