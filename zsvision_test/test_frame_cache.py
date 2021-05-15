@@ -34,10 +34,12 @@ def test_num_sequence_computer():
             num_cache_frames=100,
             frame_height=1,
             frame_width=1,
+            frame_channels=1,
             video_path=Path(""),
             total_video_frames=test_cfg["frames"],
             verbose=False,
             pad_last=test_cfg["pad_last"],
+            channel_order=None,
             cache_dtype=np.uint8,
             backend="dummy",
         )
@@ -80,6 +82,7 @@ def test_fetched_frames():
             verbose=False,
             pad_last=test_cfg["pad_last"],
             frame_channels=1,
+            channel_order=None,
             cache_dtype=np.uint8,
             backend="dummy",
         )
@@ -115,6 +118,7 @@ def test_out_of_bounds_behaviour():
         verbose=False,
         frame_channels=1,
         cache_dtype=np.uint8,
+        channel_order=None,
         backend="dummy",
     )
     cache = ContigFrameCache(

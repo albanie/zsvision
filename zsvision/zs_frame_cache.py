@@ -26,6 +26,7 @@ from pathlib import Path
 
 import numpy as np
 from beartype import beartype
+from beartype.cave import NoneTypeOr
 
 
 class DummyVideoReader:
@@ -89,6 +90,7 @@ class ContigFrameCache:
             video_path: Path,
             total_video_frames: int,
             frame_channels: int = 3,
+            channel_order: NoneTypeOr[str] = "rgb",
             pad_last: str = "no_pad",
             verbose: bool = False,
             backend: str = "cv2",
@@ -103,6 +105,8 @@ class ContigFrameCache:
             video_path: the location of the video to be read
             total_video_frames: the length of the video to be read (in frames)
             frame_channels: the number of channels for each frame (e.g. 3 for RGB)
+            channel_order: if three channels are requested, store frames in this order. Can
+                be one of None, "rgb" or "bgr" (the latter being the opencv default).
             pad_last: how to handle frame requests beyond the total number of frames in the
                 video. Options are `no_pad`, in which case an exception will be raised, or
                 `copy_last` in which case the final frame of the video will be duplicated to
@@ -115,6 +119,7 @@ class ContigFrameCache:
 
         assert video_path.exists(), f"Could not find video at {video_path}"
         if backend == "dummy":
+            assert frame_channels == 1, "dummy backend should use a single channel"
             self.video_cap = DummyVideoReader(total_video_frames)
         elif backend == "cv2":
             try:
@@ -126,8 +131,13 @@ class ContigFrameCache:
             raise ValueError(f"Unknown backend: {backend}")
         if pad_last not in {"no_pad", "zero_pad", "copy_last"}:
             raise ValueError(f"Unknown pad_last strategy: {pad_last}")
+        if channel_order not in {None, "rgb", "bgr"}:
+            raise ValueError(f"Unknown order: {channel_order}")
+        elif channel_order in {"rgb", "bgr"} and frame_channels != 3:
+            raise ValueError(f"Expected 3 channels {frame_channels} for {channel_order}")
 
         self.num_cache_frames = num_cache_frames
+        self.channel_order = channel_order
         self.frame_height = frame_height
         self.total_video_frames = total_video_frames
         self.frame_width = frame_width
@@ -329,6 +339,11 @@ class ContigFrameCache:
                     im = prev_im * 0
                 elif self.pad_last == "copy_last":
                     im = prev_im
+
+            if self.channel_order == "rgb":
+                im = im[:, :, ::-1]
+            elif self.channel_order == "bgr":
+                pass
 
             self.storage[start_idx + frame_idx] = im
 
