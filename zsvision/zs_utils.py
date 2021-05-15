@@ -31,7 +31,7 @@ def memcache(path: Union[Path, str], verbose: bool = True):
     if verbose:
         print(f"loading data from {path} ({socket.gethostname()})", end=" ", flush=True)
     tic = time.time()
-    if suffix in {".pkl", ".pickle", ".pckl"}:
+    if suffix in {".pkl", ".pickle", ".pckl", ".pk"}:
         res = pickle_loader(pkl_path=path, verbose=verbose)
     elif suffix in {".hkl", ".hickle"}:
         res = hickle.load(path)
