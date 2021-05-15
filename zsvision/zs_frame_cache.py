@@ -146,6 +146,10 @@ class ContigFrameCache:
         self.verbose = verbose
         self.head_ptr = None
 
+        # We keep track of the previous frame loaded from the video to ensure that we can
+        # implement 'copy_last' frame padding if requested
+        self.last_seen_frame = None
+
     @beartype
     def query(self, start_frame: int, end_frame: int) -> bool:
         """Determine whether the sequence of frames [start_frame, end_frame) is contained
@@ -188,10 +192,7 @@ class ContigFrameCache:
             return False
 
         last_cache_frame = self.head_ptr + self.num_cache_frames
-        if self.pad_last == "no_pad":
-            hit = start_frame >= self.head_ptr and end_frame <= last_cache_frame
-        elif self.pad_last in {"zero_pad", "copy_last"}:
-            hit = self.head_ptr <= start_frame <= last_cache_frame
+        hit = start_frame >= self.head_ptr and end_frame <= last_cache_frame
         return hit
 
     @beartype
@@ -321,10 +322,6 @@ class ContigFrameCache:
             start_idx: the position in cache storage at which to begin writing new frames.
             num_frames: the number of frames to write into storage.
         """
-        # We keep track of the previous frame loaded from the video to ensure that we can
-        # implement 'copy_last' frame padding if requested
-        prev_im = None
-
         for frame_idx in range(num_frames):
 
             _, im = self.video_cap.read()
@@ -336,9 +333,9 @@ class ContigFrameCache:
                         " beyond the end of the video"
                     )
                 elif self.pad_last == "zero_pad":
-                    im = prev_im * 0
+                    im = self.last_seen_frame * 0
                 elif self.pad_last == "copy_last":
-                    im = prev_im
+                    im = self.last_seen_frame
 
             if self.channel_order == "rgb":
                 im = im[:, :, ::-1]
@@ -348,7 +345,7 @@ class ContigFrameCache:
             self.storage[start_idx + frame_idx] = im
 
             if im is not None:
-                prev_im = im
+                self.last_seen_frame = im
 
 
 if __name__ == "__main__":

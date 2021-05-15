@@ -52,7 +52,7 @@ def test_num_sequence_computer():
         )
 
 
-def test_fetched_frames():
+def test_fetched_frames(verbose: bool = False):
     tests = (
         ({"frames": 3, "seq_length": 3, "seq_stride": 1, "pad_last": "no_pad"},
             [[0, 1, 2]]),
@@ -79,7 +79,7 @@ def test_fetched_frames():
             frame_width=1,
             video_path=Path(""),
             total_video_frames=test_cfg["frames"],
-            verbose=False,
+            verbose=verbose,
             pad_last=test_cfg["pad_last"],
             frame_channels=1,
             channel_order=None,
@@ -105,6 +105,59 @@ def test_fetched_frames():
             f"Mismatch for {test_cfg}: {fetched} vs {expected_frames} (expected)"
         )
 
+
+def test_fetched_frames_after_realignment(verbose: bool = False):
+    tests = (
+        ({"frames": 3, "seq_length": 3, "seq_stride": 1, "pad_last": "no_pad"},
+            [[0, 1, 2]]),
+        ({"frames": 4, "seq_length": 3, "seq_stride": 1, "pad_last": "no_pad"},
+            [[0, 1, 2], [1, 2, 3]]),
+        ({"frames": 5, "seq_length": 3, "seq_stride": 1, "pad_last": "no_pad"},
+            [[0, 1, 2], [1, 2, 3], [2, 3, 4]]),
+
+        ({"frames": 3, "seq_length": 3, "seq_stride": 1, "pad_last": "zero_pad"},
+            [[0, 1, 2], [1, 2, 0], [2, 0, 0]]),
+        ({"frames": 3, "seq_length": 3, "seq_stride": 2, "pad_last": "zero_pad"},
+            [[0, 1, 2], [2, 0, 0]]),
+
+        ({"frames": 3, "seq_length": 3, "seq_stride": 1, "pad_last": "copy_last"},
+            [[0, 1, 2], [1, 2, 2], [2, 2, 2]]),
+        ({"frames": 3, "seq_length": 3, "seq_stride": 2, "pad_last": "copy_last"},
+            [[0, 1, 2], [2, 2, 2]]),
+    )
+
+    for test_cfg, expected_frames in tests:
+        cache = ContigFrameCache(
+            num_cache_frames=3,
+            frame_height=1,
+            frame_width=1,
+            video_path=Path(""),
+            total_video_frames=test_cfg["frames"],
+            verbose=verbose,
+            pad_last=test_cfg["pad_last"],
+            frame_channels=1,
+            channel_order=None,
+            cache_dtype=np.uint8,
+            backend="dummy",
+        )
+        num_sequences = cache.compute_num_sequences(
+            sequence_length=test_cfg["seq_length"],
+            sequence_stride=test_cfg["seq_stride"],
+        )
+        fetched = []
+        for seq_idx in range(num_sequences):
+            seq_start = seq_idx * test_cfg["seq_stride"]
+            seq_end = seq_start + test_cfg["seq_length"]
+            frames = cache.fetch(start_frame=seq_start, end_frame=seq_end).tolist()
+
+            # Dummy frames are stored as H x W x C arrays, where H, W and C are each 1, so
+            # we flatten the arrays to get a list of frame numbers
+            frames = [x[0][0][0] for x in frames]
+            fetched.append(frames)
+
+        assert fetched == expected_frames, (
+            f"Mismatch for {test_cfg}: {fetched} vs {expected_frames} (expected)"
+        )
 
 def test_out_of_bounds_behaviour():
     total_video_frames = 10
@@ -150,5 +203,6 @@ def test_out_of_bounds_behaviour():
 
 if __name__ == "__main__":
     test_num_sequence_computer()
-    test_fetched_frames()
+    test_fetched_frames(verbose=False)
+    test_fetched_frames_after_realignment(verbose=False)
     test_out_of_bounds_behaviour()
