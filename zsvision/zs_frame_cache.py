@@ -24,7 +24,6 @@ import argparse
 from typing import Tuple
 from pathlib import Path
 
-import cv2
 import numpy as np
 from beartype import beartype
 
@@ -118,6 +117,10 @@ class ContigFrameCache:
         if backend == "dummy":
             self.video_cap = DummyVideoReader(total_video_frames)
         elif backend == "cv2":
+            try:
+                import cv2  # pylint: disable = import-outside-toplevel
+            except ImportError:
+                raise ImportError("To use cv2 backend, opencv must be installed") from None
             self.video_cap = cv2.VideoCapture(str(video_path))
         else:
             raise ValueError(f"Unknown backend: {backend}")
