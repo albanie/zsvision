@@ -284,7 +284,15 @@ def concat_features(feat_paths, axis):
 
 
 class BlockTimer:
-    """A minimal inline codeblock timer"""
+    """A minimal inline codeblock timer
+    
+    Args:
+        msg: A string to be printed together with timing information
+        mute (default: False): whether to disable all reporting
+        precise: if true, provide timing information as a total number of seconds to
+            three decimal places, rather than as a formatted timestring (e.g. HhMmSs)
+        logger: if given, use the supplied logger, rather than printing messages to screen
+    """
     @beartype
     def __init__(
             self,
@@ -301,11 +309,12 @@ class BlockTimer:
 
     def __enter__(self):
         self.start = time.time()
-        msg = f"{self.msg}..."
-        if self.logger:
-            self.logger.info(msg)
-        else:
-            print(msg, end="", flush=True)
+        if not self.mute:
+            msg = f"{self.msg}..."
+            if self.logger:
+                self.logger.info(msg)
+            else:
+                print(msg, end="", flush=True)
         return self
 
     def __exit__(self, *args):
