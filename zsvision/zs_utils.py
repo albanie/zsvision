@@ -286,7 +286,7 @@ class BlockTimer:
         msg: A string to be printed together with timing information
         mute (default: False): whether to disable all reporting
         precise: if true, provide timing information as a total number of seconds to
-            four decimal places, rather than as a formatted timestring (e.g. HhMmSs)
+            six decimal places, rather than as a formatted timestring (e.g. HhMmSs)
         logger: if given, use the supplied logger, rather than printing messages to screen
     """
     @beartype
@@ -315,7 +315,7 @@ class BlockTimer:
 
     def __exit__(self, *args):
         if self.precise:
-            total = f"{time.time() - self.start:.4f}s"
+            total = f"{time.time() - self.start:.6f}s"
         else:
             total = time.strftime('%Hh%Mm%Ss', time.gmtime(time.time() - self.start))
         if not self.mute:
