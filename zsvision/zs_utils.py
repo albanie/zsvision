@@ -3,24 +3,24 @@ import json
 import time
 import pickle
 import socket
+import logging
 import numbers
 import functools
-import logging
-import unicodedata
 import subprocess
-from typing import Dict, List, Union
+import unicodedata
+from typing import List, Union
 from pathlib import Path
-import yaml
 
+import yaml
 import numpy as np
 import hickle
 import scipy.io as spio
 import msgpack_numpy as msgpack_np
+import zsvision.zs_data_structures
 from beartype import beartype
 from mergedeep import Strategy, merge
 from typeguard import typechecked
 from beartype.cave import AnyType, NoneTypeOr
-import zsvision.zs_data_structures
 
 
 @functools.lru_cache(maxsize=64, typed=False)
@@ -169,7 +169,7 @@ def set_nested_key_val(key: str, val: AnyType, target: dict):
             if len(val) == 2 and val[1] == "":
                 val.pop()
             if val and not orig:
-                raise ValueError(f"Could not infer correct type from empty original list")
+                raise ValueError("Could not infer correct type from empty original list")
             else:
                 val = [type(orig[0])(x) for x in val]
         assert isinstance(val, list), "Failed to pass a list where expected"
@@ -264,11 +264,7 @@ def concat_features(feat_paths, axis):
         for x in aggregates:
             dims.append(x.dim)
             stores.append(x.store)
-            try:
-                assert x.keys == keys, "all aggregates must share identical keys"
-            except Exception as E:
-                print(E)
-                import ipdb; ipdb.set_trace()
+            assert x.keys == keys, "all aggregates must share identical keys"
         msg = "expected to concatenate ExpertStores with a common dimension"
         assert len(set(dims)) == 1, msg
         dim = dims[0]
@@ -285,7 +281,7 @@ def concat_features(feat_paths, axis):
 
 class BlockTimer:
     """A minimal inline codeblock timer
-    
+
     Args:
         msg: A string to be printed together with timing information
         mute (default: False): whether to disable all reporting
