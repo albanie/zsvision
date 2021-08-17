@@ -427,7 +427,7 @@ def seconds_to_timestr(secs: numbers.Number) -> str:
     NOTE: Probably this function is not needed. But I refuse to spend more of my life
     looking at datetime/time/strftime combinations.
     """
-    assert secs >= 0, "Expected a non-negative number of seconds"
+    assert secs >= 0, f"Expected a non-negative number of seconds, but requested {secs}"
     mins, secs = divmod(secs, 60)
     hours, mins = divmod(mins, 60)
     ms = secs - int(secs)
