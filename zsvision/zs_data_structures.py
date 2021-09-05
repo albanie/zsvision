@@ -82,6 +82,20 @@ class HashableOrderedDict(dict):
         return hash(frozenset(self))
 
 
+class FeatureCache(ExpertStore):
+
+    def __init__(self, keylist: List[str], dim: int, dtype: np.dtype = np.float16):
+        super().__init__(keylist=keylist, dim=dim, dtype=dtype)
+        self.cache_hits = np.zeros(len(keylist), dtype=bool)
+
+    def __setitem__(self, key, value):
+        super().__setitem__(key=key, value=value)
+        self.cache_hits[self.keymap[key]] = True
+
+    def __contains__(self, key):
+        return self.cache_hits[self.keymap[key]]
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--dim", type=int, default=2048)
