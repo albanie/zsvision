@@ -2,6 +2,7 @@
 """
 
 import numpy as np
+from nose.tools import assert_raises
 from zsvision.zs_data_structures import FeatureCache
 
 
@@ -30,5 +31,19 @@ def test_feature_cache():
     assert unknown_key not in cache, f"Expected cache miss for {unused_key}"
 
 
+def test_feature_cache_with_validated_key_checks():
+    dim = 2048
+    num_keys = 1000
+    keylist = [str(x) for x in range(num_keys)]
+    cache = FeatureCache(keylist=keylist, dim=dim, validate_key_checks=True)
+
+    unused_key = "1"
+    assert unused_key not in cache, f"Expected cache miss for {unused_key}"
+
+    unknown_key = "-1"
+    assert_raises(AssertionError, cache.__contains__, unknown_key), "Expected error"
+
+
 if __name__ == "__main__":
     test_feature_cache()
+    test_feature_cache_with_validated_key_checks()

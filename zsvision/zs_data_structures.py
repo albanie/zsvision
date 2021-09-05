@@ -10,11 +10,12 @@ Relative comparison:
     Memory needs for expert_store: 412.0 MB
 """
 
-import argparse
-import humanize
 import pickle
-import numpy as np
+import argparse
 from typing import List
+
+import numpy as np
+import humanize
 
 
 class ExpertStore:
@@ -84,15 +85,24 @@ class HashableOrderedDict(dict):
 
 class FeatureCache(ExpertStore):
 
-    def __init__(self, keylist: List[str], dim: int, dtype: np.dtype = np.float16):
+    def __init__(
+            self,
+            keylist: List[str],
+            dim: int,
+            dtype: np.dtype = np.float16,
+            validate_key_checks: bool = False,
+    ):
         super().__init__(keylist=keylist, dim=dim, dtype=dtype)
         self.cache_hits = np.zeros(len(keylist), dtype=bool)
+        self.validate_key_checks = validate_key_checks
 
     def __setitem__(self, key, value):
         super().__setitem__(key=key, value=value)
         self.cache_hits[self.keymap[key]] = True
 
     def __contains__(self, key):
+        if self.validate_key_checks:
+            assert key in self.keymap, f"Requested unknown key {key}"
         return key in self.keymap and self.cache_hits[self.keymap[key]]
 
 
