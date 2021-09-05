@@ -26,6 +26,8 @@ def test_feature_cache():
     unused_key = "1"
     assert unused_key not in cache, f"Did not expect cache hit for {unused_key}"
 
+    unknown_key = "-1"
+    assert unknown_key not in cache, f"Expected cache miss for {unused_key}"
 
 
 if __name__ == "__main__":

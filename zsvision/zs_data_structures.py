@@ -93,7 +93,7 @@ class FeatureCache(ExpertStore):
         self.cache_hits[self.keymap[key]] = True
 
     def __contains__(self, key):
-        return self.cache_hits[self.keymap[key]]
+        return key in self.keymap and self.cache_hits[self.keymap[key]]
 
 
 def main():
