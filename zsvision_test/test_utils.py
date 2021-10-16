@@ -6,6 +6,7 @@ import json
 import pickle
 import logging
 import tempfile
+import torch
 from pathlib import Path
 
 import numpy as np
@@ -78,6 +79,9 @@ def test_memcache():
 
     def hickle_dumper(obj, path):
         hickle.dump(obj, path)
+    
+    def torch_dumper(obj, path):
+        torch.save(obj, path)
 
     storage_map = {
         "pickle": {
@@ -99,6 +103,10 @@ def test_memcache():
         "json": {
             "dumper": json_dumper,
             "suffix": ".json",
+        },
+        "torch": {
+            "dumper": torch_dumper,
+            "suffix": ".ptn",
         }
     }
     data = [
