@@ -19,7 +19,6 @@ import msgpack_numpy as msgpack_np
 import zsvision.zs_data_structures
 from beartype import beartype
 from mergedeep import Strategy, merge
-from typeguard import typechecked
 from beartype.cave import AnyType, NoneTypeOr
 
 
@@ -434,7 +433,7 @@ def seconds_to_timestr(secs: numbers.Number) -> str:
     return f"{int(hours):02d}:{int(mins):02d}:{int(secs):02d}.{int(ms * 1000):03d}"
 
 
-@typechecked
+@beartype
 def list_visible_gpu_types() -> List[str]:
     """Provide a list of the NVIDIA GPUs that are visible on the current machine.
 
