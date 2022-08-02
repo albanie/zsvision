@@ -1,6 +1,7 @@
 import sys
 import json
 import time
+import torch
 import pickle
 import socket
 import logging
@@ -46,6 +47,8 @@ def memcache(path: Union[Path, str], verbose: bool = True):
             res = yaml.safe_load(f)
     elif suffix == ".mat":
         res = loadmat(path)
+    elif suffix == ".pth":
+        res = torch.load(path)
     else:
         raise ValueError(f"unknown suffix: {suffix} for path {path}")
     if verbose:

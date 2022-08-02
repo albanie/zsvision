@@ -31,6 +31,7 @@ setuptools.setup(
         "beartype>=0.3.2",
         "hickle>=4.0.0",
         "pyyaml",
+        "torch>=1.0",
     ],
     classifiers=[
         "Operating System :: OS Independent",
